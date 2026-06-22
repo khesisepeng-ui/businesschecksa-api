@@ -1,34 +1,34 @@
+const { app } = require('@azure/functions');
 const sql = require('mssql');
 
-module.exports = async function (context, req) {
+app.http('GetBusinesses', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
 
-    try {
+    handler: async (request, context) => {
 
-        await sql.connect(
-            process.env.SqlConnectionString
-        );
+        try {
 
-        const result = await sql.query(`
-            SELECT *
-            FROM Businesses
-        `);
+            await sql.connect(process.env.SqlConnectionString);
 
-        context.res = {
-            status: 200,
-            headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*"
-            },
-            body: result.recordset
-        };
+            const result = await sql.query(`
+                SELECT *
+                FROM Businesses
+            `);
 
-    } catch (error) {
+            return {
+                status: 200,
+                jsonBody: result.recordset
+            };
 
-        context.log(error);
+        } catch (error) {
 
-        context.res = {
-            status: 500,
-            body: error.message
-        };
+            context.error(error);
+
+            return {
+                status: 500,
+                body: error.message
+            };
+        }
     }
-};
+});
